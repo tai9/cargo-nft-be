@@ -5,16 +5,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	db "github.com/tai9/cargo-nft-be/db/sqlc"
+	"github.com/tai9/cargo-nft-be/token"
 )
 
 type createTransactionRequest struct {
-	NftID           int64   `json:"nft_id" binding:"required"`
-	Event           string  `json:"event" binding:"required"`
-	Token           string  `json:"token"`
-	Quantity        float64 `json:"quantity"`
-	FromUserID      int64   `json:"from_user_id"`
-	ToUserID        int64   `json:"to_user_id" binding:"required"`
-	TransactionHash string  `json:"transaction_hash" binding:"required"`
+	NftID    int64   `json:"nft_id" binding:"required"`
+	Event    string  `json:"event" binding:"required"`
+	Token    string  `json:"token"`
+	Quantity float64 `json:"quantity"`
+	ToUserID int64   `json:"to_user_id" binding:"required"`
 }
 
 func (server *Server) createTransaction(ctx *gin.Context) {
@@ -25,14 +24,21 @@ func (server *Server) createTransaction(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	user, err := server.store.GetUser(ctx, authPayload.WalletAddress)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
 	arg := db.CreateTransactionParams{
 		NftID:           req.NftID,
 		Event:           req.Event,
 		Token:           req.Token,
 		Quantity:        req.Quantity,
-		FromUserID:      req.FromUserID,
+		FromUserID:      user.ID,
 		ToUserID:        req.ToUserID,
-		TransactionHash: req.TransactionHash,
+		TransactionHash: "",
 	}
 
 	transaction, err := server.store.CreateTransaction(ctx, arg)

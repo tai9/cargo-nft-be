@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/tai9/cargo-nft-be/constants"
 	db "github.com/tai9/cargo-nft-be/db/sqlc"
 )
 
@@ -48,13 +49,27 @@ func (server *Server) createNFT(ctx *gin.Context) {
 		Metadata:        req.Metadata,
 	}
 
-	NFT, err := server.store.CreateNFT(ctx, arg)
+	nft, err := server.store.CreateNFT(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, NFT)
+	_, err = server.store.CreateTransaction(ctx, db.CreateTransactionParams{
+		NftID:           nft.ID,
+		Event:           constants.MINTED,
+		Token:           "",
+		Quantity:        0,
+		FromUserID:      constants.NULL_ADDRESS_USER_ID,
+		ToUserID:        nft.UserID,
+		TransactionHash: "",
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, nft)
 }
 
 type updateNFTRequest struct {
