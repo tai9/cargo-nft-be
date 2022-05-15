@@ -79,6 +79,7 @@ func (server *Server) setupRouter() {
 	authRoutes.DELETE("/offers/:id", server.deleteOffer)
 
 	authRoutes.GET("/collections", server.listCollection)
+	authRoutes.GET("/collections/:id", server.getCollection)
 	authRoutes.POST("/collections", server.createCollection)
 	authRoutes.PATCH("/collections/:id", server.updateCollection)
 	authRoutes.DELETE("/collections/:id", server.deleteCollection)

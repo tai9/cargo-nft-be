@@ -5,6 +5,7 @@ package db
 
 import (
 	"context"
+	"time"
 )
 
 const createCollection = `-- name: CreateCollection :one
@@ -80,13 +81,34 @@ func (q *Queries) DeleteCollection(ctx context.Context, id int64) error {
 }
 
 const getCollection = `-- name: GetCollection :one
-SELECT id, user_id, name, description, blockchain, owners, payment_token, creator_earning, featured_img, banner_img, ins_link, twitter_link, website_link, created_at, updated_at FROM collections
-WHERE id = $1 LIMIT 1
+SELECT collections.id, collections.user_id, collections.name, collections.description, collections.blockchain, collections.owners, collections.payment_token, collections.creator_earning, collections.featured_img, collections.banner_img, collections.ins_link, collections.twitter_link, collections.website_link, collections.created_at, collections.updated_at, users.username created_by FROM collections, users
+WHERE collections.user_id = users.id
+AND collections.id = $1
+LIMIT 1
 `
 
-func (q *Queries) GetCollection(ctx context.Context, id int64) (Collection, error) {
+type GetCollectionRow struct {
+	ID             int64     `json:"id"`
+	UserID         int64     `json:"user_id"`
+	Name           string    `json:"name"`
+	Description    string    `json:"description"`
+	Blockchain     string    `json:"blockchain"`
+	Owners         string    `json:"owners"`
+	PaymentToken   string    `json:"payment_token"`
+	CreatorEarning string    `json:"creator_earning"`
+	FeaturedImg    string    `json:"featured_img"`
+	BannerImg      string    `json:"banner_img"`
+	InsLink        string    `json:"ins_link"`
+	TwitterLink    string    `json:"twitter_link"`
+	WebsiteLink    string    `json:"website_link"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	CreatedBy      string    `json:"created_by"`
+}
+
+func (q *Queries) GetCollection(ctx context.Context, id int64) (GetCollectionRow, error) {
 	row := q.db.QueryRowContext(ctx, getCollection, id)
-	var i Collection
+	var i GetCollectionRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
@@ -103,6 +125,7 @@ func (q *Queries) GetCollection(ctx context.Context, id int64) (Collection, erro
 		&i.WebsiteLink,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CreatedBy,
 	)
 	return i, err
 }
@@ -119,7 +142,8 @@ func (q *Queries) GetTotalCollection(ctx context.Context) (int64, error) {
 }
 
 const listCollections = `-- name: ListCollections :many
-SELECT id, user_id, name, description, blockchain, owners, payment_token, creator_earning, featured_img, banner_img, ins_link, twitter_link, website_link, created_at, updated_at FROM collections
+SELECT collections.id, collections.user_id, collections.name, collections.description, collections.blockchain, collections.owners, collections.payment_token, collections.creator_earning, collections.featured_img, collections.banner_img, collections.ins_link, collections.twitter_link, collections.website_link, collections.created_at, collections.updated_at, users.username created_by FROM collections, users
+WHERE collections.user_id = users.id
 ORDER BY updated_at
 LIMIT $1
 OFFSET $2
@@ -130,15 +154,34 @@ type ListCollectionsParams struct {
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListCollections(ctx context.Context, arg ListCollectionsParams) ([]Collection, error) {
+type ListCollectionsRow struct {
+	ID             int64     `json:"id"`
+	UserID         int64     `json:"user_id"`
+	Name           string    `json:"name"`
+	Description    string    `json:"description"`
+	Blockchain     string    `json:"blockchain"`
+	Owners         string    `json:"owners"`
+	PaymentToken   string    `json:"payment_token"`
+	CreatorEarning string    `json:"creator_earning"`
+	FeaturedImg    string    `json:"featured_img"`
+	BannerImg      string    `json:"banner_img"`
+	InsLink        string    `json:"ins_link"`
+	TwitterLink    string    `json:"twitter_link"`
+	WebsiteLink    string    `json:"website_link"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	CreatedBy      string    `json:"created_by"`
+}
+
+func (q *Queries) ListCollections(ctx context.Context, arg ListCollectionsParams) ([]ListCollectionsRow, error) {
 	rows, err := q.db.QueryContext(ctx, listCollections, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Collection{}
+	items := []ListCollectionsRow{}
 	for rows.Next() {
-		var i Collection
+		var i ListCollectionsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,
@@ -155,6 +198,7 @@ func (q *Queries) ListCollections(ctx context.Context, arg ListCollectionsParams
 			&i.WebsiteLink,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CreatedBy,
 		); err != nil {
 			return nil, err
 		}

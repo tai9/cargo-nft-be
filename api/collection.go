@@ -142,11 +142,16 @@ type ListCollectionsParams struct {
 	Limit int32 `form:"limit" json:"limit" binding:"min=0"`
 }
 
+type CollectionsResponse struct {
+	db.GetCollectionRow
+	TotalNFT int64 `json:"total_nft"`
+}
+
 type ListCollectionResponse struct {
-	Page  int32           `json:"page"`
-	Limit int32           `json:"limit"`
-	Total int64           `json:"total"`
-	Data  []db.Collection `json:"data"`
+	Page  int32                   `json:"page"`
+	Limit int32                   `json:"limit"`
+	Total int64                   `json:"total"`
+	Data  []db.ListCollectionsRow `json:"data"`
 }
 
 func (server *Server) listCollection(ctx *gin.Context) {
@@ -184,7 +189,35 @@ func (server *Server) listCollection(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, rsp)
 }
 
-func checkEmptyCollection(req updateCollectionRequest, collection *db.Collection) {
+func (server *Server) getCollection(ctx *gin.Context) {
+	var req CollectionParams
+
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errResponse(err))
+		return
+	}
+
+	collection, err := server.store.GetCollection(ctx, req.ID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	totalNFT, err := server.store.GetTotalNFTByCollectionId(ctx, collection.ID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	rsp := CollectionsResponse{
+		collection,
+		totalNFT,
+	}
+
+	ctx.JSON(http.StatusOK, rsp)
+}
+
+func checkEmptyCollection(req updateCollectionRequest, collection *db.GetCollectionRow) {
 	if req.Name == "" {
 		req.Name = collection.Name
 	}

@@ -1,12 +1,15 @@
 -- name: GetCollection :one
-SELECT * FROM collections
-WHERE id = $1 LIMIT 1;
+SELECT collections.*, users.username created_by FROM collections, users
+WHERE collections.user_id = users.id
+AND collections.id = $1
+LIMIT 1;
 
 -- name: GetTotalCollection :one
 SELECT count(*) FROM collections;
 
 -- name: ListCollections :many
-SELECT * FROM collections
+SELECT collections.*, users.username created_by FROM collections, users
+WHERE collections.user_id = users.id
 ORDER BY updated_at
 LIMIT $1
 OFFSET $2;

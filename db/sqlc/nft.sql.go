@@ -122,6 +122,19 @@ func (q *Queries) GetTotalNFT(ctx context.Context) (int64, error) {
 	return count, err
 }
 
+const getTotalNFTByCollectionId = `-- name: GetTotalNFTByCollectionId :one
+SELECT COUNT(nfts.collection_id) FROM collections LEFT JOIN nfts
+ON nfts.collection_id = collections.id
+GROUP BY collections.id HAVING collections.id = $1
+`
+
+func (q *Queries) GetTotalNFTByCollectionId(ctx context.Context, id int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getTotalNFTByCollectionId, id)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const listNFTs = `-- name: ListNFTs :many
 SELECT id, user_id, collection_id, name, description, featured_img, supply, views, favorites, contract_address, token_id, token_standard, blockchain, metadata, created_at, updated_at FROM nfts
 ORDER BY updated_at

@@ -5,6 +5,11 @@ WHERE id = $1 LIMIT 1;
 -- name: GetTotalNFT :one
 SELECT count(*) FROM nfts;
 
+-- name: GetTotalNFTByCollectionId :one
+SELECT COUNT(nfts.collection_id) FROM collections LEFT JOIN nfts
+ON nfts.collection_id = collections.id
+GROUP BY collections.id HAVING collections.id = $1;
+
 -- name: ListNFTs :many
 SELECT * FROM nfts
 ORDER BY updated_at
