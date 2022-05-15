@@ -1,0 +1,32 @@
+-- name: GetNFT :one
+SELECT * FROM nfts
+WHERE id = $1 LIMIT 1;
+
+-- name: GetTotalNFT :one
+SELECT count(*) FROM nfts;
+
+-- name: ListNFTs :many
+SELECT * FROM nfts
+ORDER BY updated_at
+LIMIT $1
+OFFSET $2;
+
+-- name: CreateNFT :one
+INSERT INTO nfts (
+  user_id, collection_id, name, description, featured_img, supply,
+  views, favorites, contract_address, token_id, token_standard,
+  blockchain, metadata
+) VALUES (
+  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+)
+RETURNING *;
+
+-- name: UpdateNFT :exec
+UPDATE nfts
+SET name = $2, description = $3, supply = $4, featured_img = $5,
+    views = $6, favorites = $7
+WHERE id = $1;
+
+-- name: DeleteNFT :exec
+DELETE FROM nfts
+WHERE id = $1;
