@@ -10,9 +10,9 @@ import (
 
 const createOffer = `-- name: CreateOffer :one
 INSERT INTO offers (
-  user_id, nft_id, usd_price, quantity, floor_difference, expiration
+  user_id, nft_id, usd_price, quantity, floor_difference, expiration, token
 ) VALUES (
-  $1, $2, $3, $4, $5, $6
+  $1, $2, $3, $4, $5, $6, $7
 )
 RETURNING id, user_id, nft_id, quantity, usd_price, token, floor_difference, expiration, created_at, updated_at
 `
@@ -24,6 +24,7 @@ type CreateOfferParams struct {
 	Quantity        float64   `json:"quantity"`
 	FloorDifference string    `json:"floor_difference"`
 	Expiration      time.Time `json:"expiration"`
+	Token           string    `json:"token"`
 }
 
 func (q *Queries) CreateOffer(ctx context.Context, arg CreateOfferParams) (Offer, error) {
@@ -34,6 +35,7 @@ func (q *Queries) CreateOffer(ctx context.Context, arg CreateOfferParams) (Offer
 		arg.Quantity,
 		arg.FloorDifference,
 		arg.Expiration,
+		arg.Token,
 	)
 	var i Offer
 	err := row.Scan(

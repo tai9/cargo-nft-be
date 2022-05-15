@@ -6,15 +6,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	db "github.com/tai9/cargo-nft-be/db/sqlc"
+	"github.com/tai9/cargo-nft-be/token"
 )
 
 type createOfferRequest struct {
-	UserID     int64     `json:"user_id" binding:"required"`
 	NftID      int64     `json:"nft_id" binding:"required"`
 	UsdPrice   float64   `json:"usd_price" binding:"required"`
 	Token      string    `json:"token" binding:"required"`
 	Quantity   float64   `json:"quantity" binding:"required"`
-	Expiration time.Time `json:"expiration" binding:"required"`
+	Expiration time.Time `json:"expiration"`
 }
 
 func (server *Server) createOffer(ctx *gin.Context) {
@@ -25,11 +25,19 @@ func (server *Server) createOffer(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	user, err := server.store.GetUser(ctx, authPayload.WalletAddress)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
 	arg := db.CreateOfferParams{
-		UserID:          req.UserID,
+		UserID:          user.ID,
 		NftID:           req.NftID,
 		UsdPrice:        req.UsdPrice,
 		Quantity:        req.Quantity,
+		Token:           req.Token,
 		Expiration:      req.Expiration,
 		FloorDifference: "-", // TODO: calc with collection floor price
 

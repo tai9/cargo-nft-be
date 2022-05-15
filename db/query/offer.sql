@@ -13,9 +13,9 @@ OFFSET $2;
 
 -- name: CreateOffer :one
 INSERT INTO offers (
-  user_id, nft_id, usd_price, quantity, floor_difference, expiration
+  user_id, nft_id, usd_price, quantity, floor_difference, expiration, token
 ) VALUES (
-  $1, $2, $3, $4, $5, $6
+  $1, $2, $3, $4, $5, $6, $7
 )
 RETURNING *;
 
