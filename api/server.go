@@ -92,6 +92,8 @@ func (server *Server) setupRouter() {
 	authRoutes.POST("/transactions", server.createTransaction)
 	authRoutes.DELETE("/transactions/:id", server.deleteTransaction)
 
+	authRoutes.GET("/categories", server.listCategory)
+
 	server.router = router
 }
 

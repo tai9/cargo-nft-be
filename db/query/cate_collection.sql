@@ -6,10 +6,9 @@ WHERE id = $1 LIMIT 1;
 SELECT count(*) FROM cate_collections;
 
 -- name: ListCateCollections :many
-SELECT * FROM cate_collections
-ORDER BY updated_at
-LIMIT $1
-OFFSET $2;
+SELECT cate_collections.*, categories."name" category_name FROM cate_collections, categories, collections
+WHERE cate_collections.category_id = categories.id
+AND cate_collections.collection_id = collections.id;
 
 -- name: CreateCateCollection :one
 INSERT INTO cate_collections (

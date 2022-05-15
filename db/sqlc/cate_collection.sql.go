@@ -5,6 +5,7 @@ package db
 
 import (
 	"context"
+	"time"
 )
 
 const createCateCollection = `-- name: CreateCateCollection :one
@@ -74,32 +75,36 @@ func (q *Queries) GetTotalCateCollection(ctx context.Context) (int64, error) {
 }
 
 const listCateCollections = `-- name: ListCateCollections :many
-SELECT id, collection_id, category_id, created_at, updated_at FROM cate_collections
-ORDER BY updated_at
-LIMIT $1
-OFFSET $2
+SELECT cate_collections.id, cate_collections.collection_id, cate_collections.category_id, cate_collections.created_at, cate_collections.updated_at, categories."name" category_name FROM cate_collections, categories, collections
+WHERE cate_collections.category_id = categories.id
+AND cate_collections.collection_id = collections.id
 `
 
-type ListCateCollectionsParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+type ListCateCollectionsRow struct {
+	ID           int64     `json:"id"`
+	CollectionID int64     `json:"collection_id"`
+	CategoryID   int64     `json:"category_id"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	CategoryName string    `json:"category_name"`
 }
 
-func (q *Queries) ListCateCollections(ctx context.Context, arg ListCateCollectionsParams) ([]CateCollection, error) {
-	rows, err := q.db.QueryContext(ctx, listCateCollections, arg.Limit, arg.Offset)
+func (q *Queries) ListCateCollections(ctx context.Context) ([]ListCateCollectionsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listCateCollections)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []CateCollection{}
+	items := []ListCateCollectionsRow{}
 	for rows.Next() {
-		var i CateCollection
+		var i ListCateCollectionsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.CollectionID,
 			&i.CategoryID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CategoryName,
 		); err != nil {
 			return nil, err
 		}

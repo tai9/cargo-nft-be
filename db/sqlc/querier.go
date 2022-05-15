@@ -39,7 +39,7 @@ type Querier interface {
 	GetTotalUser(ctx context.Context) (int64, error)
 	GetTransaction(ctx context.Context, id int64) (Transaction, error)
 	GetUser(ctx context.Context, walletAddress string) (User, error)
-	ListCateCollections(ctx context.Context, arg ListCateCollectionsParams) ([]CateCollection, error)
+	ListCateCollections(ctx context.Context) ([]ListCateCollectionsRow, error)
 	ListCategories(ctx context.Context, arg ListCategoriesParams) ([]Category, error)
 	ListCollections(ctx context.Context, arg ListCollectionsParams) ([]Collection, error)
 	ListCryptoCurrencies(ctx context.Context, arg ListCryptoCurrenciesParams) ([]CryptoCurrency, error)
