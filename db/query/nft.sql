@@ -3,7 +3,8 @@ SELECT * FROM nfts
 WHERE id = $1 LIMIT 1;
 
 -- name: GetTotalNFT :one
-SELECT count(*) FROM nfts;
+SELECT count(*) FROM nfts
+WHERE LOWER(nfts."name") LIKE sqlc.arg(search)::varchar;
 
 -- name: GetTotalNFTByCollectionId :one
 SELECT COUNT(nfts.collection_id) FROM collections LEFT JOIN nfts
@@ -12,6 +13,7 @@ GROUP BY collections.id HAVING collections.id = $1;
 
 -- name: ListNFTs :many
 SELECT * FROM nfts
+WHERE LOWER(nfts."name") LIKE sqlc.arg(search)::varchar
 ORDER BY updated_at
 LIMIT $1
 OFFSET $2;

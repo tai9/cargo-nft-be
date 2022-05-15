@@ -113,10 +113,11 @@ func (q *Queries) GetNFT(ctx context.Context, id int64) (Nft, error) {
 
 const getTotalNFT = `-- name: GetTotalNFT :one
 SELECT count(*) FROM nfts
+WHERE LOWER(nfts."name") LIKE $1::varchar
 `
 
-func (q *Queries) GetTotalNFT(ctx context.Context) (int64, error) {
-	row := q.db.QueryRowContext(ctx, getTotalNFT)
+func (q *Queries) GetTotalNFT(ctx context.Context, search string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getTotalNFT, search)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -137,18 +138,20 @@ func (q *Queries) GetTotalNFTByCollectionId(ctx context.Context, id int64) (int6
 
 const listNFTs = `-- name: ListNFTs :many
 SELECT id, user_id, collection_id, name, description, featured_img, supply, views, favorites, contract_address, token_id, token_standard, blockchain, metadata, created_at, updated_at FROM nfts
+WHERE LOWER(nfts."name") LIKE $3::varchar
 ORDER BY updated_at
 LIMIT $1
 OFFSET $2
 `
 
 type ListNFTsParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	Limit  int32  `json:"limit"`
+	Offset int32  `json:"offset"`
+	Search string `json:"search"`
 }
 
 func (q *Queries) ListNFTs(ctx context.Context, arg ListNFTsParams) ([]Nft, error) {
-	rows, err := q.db.QueryContext(ctx, listNFTs, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listNFTs, arg.Limit, arg.Offset, arg.Search)
 	if err != nil {
 		return nil, err
 	}

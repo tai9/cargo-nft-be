@@ -33,7 +33,7 @@ type Querier interface {
 	GetTotalCategory(ctx context.Context) (int64, error)
 	GetTotalCollection(ctx context.Context) (int64, error)
 	GetTotalCryptoCurrency(ctx context.Context) (int64, error)
-	GetTotalNFT(ctx context.Context) (int64, error)
+	GetTotalNFT(ctx context.Context, search string) (int64, error)
 	GetTotalNFTByCollectionId(ctx context.Context, id int64) (int64, error)
 	GetTotalOffer(ctx context.Context) (int64, error)
 	GetTotalTransaction(ctx context.Context) (int64, error)

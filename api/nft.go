@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -126,8 +127,9 @@ type NFTParams struct {
 }
 
 type ListNFTsParams struct {
-	Page  int32 `form:"page" json:"page" binding:"min=1"`
-	Limit int32 `form:"limit" json:"limit" binding:"min=0"`
+	Page   int32  `form:"page" json:"page" binding:"min=1" default:"1"`
+	Limit  int32  `form:"limit" json:"limit" binding:"min=0"`
+	Search string `form:"search" json:"search" default:""`
 }
 
 type ListNFTResponse struct {
@@ -145,7 +147,10 @@ func (server *Server) listNFT(ctx *gin.Context) {
 		return
 	}
 
+	searchQuery := fmt.Sprintf("%%%s%%", req.Search)
+
 	arg := db.ListNFTsParams{
+		Search: searchQuery,
 		Limit:  req.Limit,
 		Offset: (req.Page - 1) * req.Limit,
 	}
@@ -156,7 +161,7 @@ func (server *Server) listNFT(ctx *gin.Context) {
 		return
 	}
 
-	totalNFTs, err := server.store.GetTotalNFT(ctx)
+	totalNFTs, err := server.store.GetTotalNFT(ctx, searchQuery)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 		return
