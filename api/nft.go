@@ -133,10 +133,10 @@ type ListNFTsParams struct {
 }
 
 type ListNFTResponse struct {
-	Page  int32    `json:"page"`
-	Limit int32    `json:"limit"`
-	Total int64    `json:"total"`
-	Data  []db.Nft `json:"data"`
+	Page  int32            `json:"page"`
+	Limit int32            `json:"limit"`
+	Total int64            `json:"total"`
+	Data  []db.ListNFTsRow `json:"data"`
 }
 
 func (server *Server) listNFT(ctx *gin.Context) {

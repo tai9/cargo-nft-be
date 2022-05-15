@@ -45,7 +45,7 @@ type Querier interface {
 	ListCategories(ctx context.Context, arg ListCategoriesParams) ([]Category, error)
 	ListCollections(ctx context.Context, arg ListCollectionsParams) ([]ListCollectionsRow, error)
 	ListCryptoCurrencies(ctx context.Context, arg ListCryptoCurrenciesParams) ([]CryptoCurrency, error)
-	ListNFTs(ctx context.Context, arg ListNFTsParams) ([]Nft, error)
+	ListNFTs(ctx context.Context, arg ListNFTsParams) ([]ListNFTsRow, error)
 	ListOffers(ctx context.Context, arg ListOffersParams) ([]Offer, error)
 	ListTransactions(ctx context.Context, arg ListTransactionsParams) ([]Transaction, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)

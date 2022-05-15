@@ -5,6 +5,7 @@ package db
 
 import (
 	"context"
+	"time"
 )
 
 const createNFT = `-- name: CreateNFT :one
@@ -137,8 +138,8 @@ func (q *Queries) GetTotalNFTByCollectionId(ctx context.Context, id int64) (int6
 }
 
 const listNFTs = `-- name: ListNFTs :many
-SELECT id, user_id, collection_id, name, description, featured_img, supply, views, favorites, contract_address, token_id, token_standard, blockchain, metadata, created_at, updated_at FROM nfts
-WHERE LOWER(nfts."name") LIKE $3::varchar
+SELECT nfts.id, nfts.user_id, nfts.collection_id, nfts.name, nfts.description, nfts.featured_img, nfts.supply, nfts.views, nfts.favorites, nfts.contract_address, nfts.token_id, nfts.token_standard, nfts.blockchain, nfts.metadata, nfts.created_at, nfts.updated_at, collections."name" collection_name FROM nfts, collections
+WHERE nfts.collection_id = collections.id AND LOWER(nfts."name") LIKE $3::varchar
 ORDER BY updated_at
 LIMIT $1
 OFFSET $2
@@ -150,15 +151,35 @@ type ListNFTsParams struct {
 	Search string `json:"search"`
 }
 
-func (q *Queries) ListNFTs(ctx context.Context, arg ListNFTsParams) ([]Nft, error) {
+type ListNFTsRow struct {
+	ID              int64     `json:"id"`
+	UserID          int64     `json:"user_id"`
+	CollectionID    int64     `json:"collection_id"`
+	Name            string    `json:"name"`
+	Description     string    `json:"description"`
+	FeaturedImg     string    `json:"featured_img"`
+	Supply          int32     `json:"supply"`
+	Views           string    `json:"views"`
+	Favorites       string    `json:"favorites"`
+	ContractAddress string    `json:"contract_address"`
+	TokenID         string    `json:"token_id"`
+	TokenStandard   string    `json:"token_standard"`
+	Blockchain      string    `json:"blockchain"`
+	Metadata        string    `json:"metadata"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+	CollectionName  string    `json:"collection_name"`
+}
+
+func (q *Queries) ListNFTs(ctx context.Context, arg ListNFTsParams) ([]ListNFTsRow, error) {
 	rows, err := q.db.QueryContext(ctx, listNFTs, arg.Limit, arg.Offset, arg.Search)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Nft{}
+	items := []ListNFTsRow{}
 	for rows.Next() {
-		var i Nft
+		var i ListNFTsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,
@@ -176,6 +197,7 @@ func (q *Queries) ListNFTs(ctx context.Context, arg ListNFTsParams) ([]Nft, erro
 			&i.Metadata,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CollectionName,
 		); err != nil {
 			return nil, err
 		}

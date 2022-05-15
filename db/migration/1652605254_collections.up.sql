@@ -1,0 +1,1 @@
+ALTER TABLE ONLY collections ALTER COLUMN name SET DEFAULT '';

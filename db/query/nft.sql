@@ -12,8 +12,8 @@ ON nfts.collection_id = collections.id
 GROUP BY collections.id HAVING collections.id = $1;
 
 -- name: ListNFTs :many
-SELECT * FROM nfts
-WHERE LOWER(nfts."name") LIKE sqlc.arg(search)::varchar
+SELECT nfts.*, collections."name" collection_name FROM nfts, collections
+WHERE nfts.collection_id = collections.id AND LOWER(nfts."name") LIKE sqlc.arg(search)::varchar
 ORDER BY updated_at
 LIMIT $1
 OFFSET $2;
