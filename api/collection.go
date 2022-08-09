@@ -5,11 +5,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	db "github.com/tai9/cargo-nft-be/db/sqlc"
+	"github.com/tai9/cargo-nft-be/token"
+	"github.com/thirdweb-dev/go-sdk/thirdweb"
 )
 
 type createCollectionRequest struct {
+	Id             int64  `json:"id"`
 	CategoryID     int64  `json:"category_id" binding:"required"`
-	UserID         int64  `json:"user_id" binding:"required"`
 	Name           string `json:"name" binding:"required"`
 	Description    string `json:"description"`
 	Blockchain     string `json:"blockchain"`
@@ -24,10 +26,10 @@ type createCollectionRequest struct {
 }
 
 type updateCollectionRequest struct {
-	Name        string `json:"name" binding:"required"`
+	Name        string `json:"name"`
 	Description string `json:"description"`
 	Owners      string `json:"owners"`
-	FeaturedImg string `json:"featured_img" binding:"required"`
+	FeaturedImg string `json:"featured_img"`
 	BannerImg   string `json:"banner_img"`
 	InsLink     string `json:"ins_link"`
 	TwitterLink string `json:"twitter_link"`
@@ -42,19 +44,36 @@ func (server *Server) createCollection(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	user, err := server.store.GetUser(ctx, authPayload.WalletAddress)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	contractAddress, err := server.thirdwebSdk.Deployer.DeployNFTCollection(&thirdweb.DeployNFTCollectionMetadata{
+		Name:        req.Name,
+		Description: req.Description,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
 	arg := db.CreateCollectionParams{
-		UserID:         req.UserID,
-		Name:           req.Name,
-		Description:    req.Description,
-		Blockchain:     req.Blockchain,
-		Owners:         req.Owners,
-		PaymentToken:   req.PaymentToken,
-		CreatorEarning: req.CreatorEarning,
-		FeaturedImg:    req.FeaturedImg,
-		BannerImg:      req.BannerImg,
-		InsLink:        req.InsLink,
-		TwitterLink:    req.TwitterLink,
-		WebsiteLink:    req.WebsiteLink,
+		UserID:          user.ID,
+		Name:            req.Name,
+		Description:     req.Description,
+		Blockchain:      req.Blockchain,
+		Owners:          req.Owners,
+		PaymentToken:    req.PaymentToken,
+		CreatorEarning:  req.CreatorEarning,
+		FeaturedImg:     req.FeaturedImg,
+		BannerImg:       req.BannerImg,
+		InsLink:         req.InsLink,
+		TwitterLink:     req.TwitterLink,
+		WebsiteLink:     req.WebsiteLink,
+		ContractAddress: contractAddress,
 	}
 
 	collection, err := server.store.CreateCollection(ctx, arg)
@@ -62,6 +81,7 @@ func (server *Server) createCollection(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 		return
 	}
+	req.Id = collection.ID
 
 	_, err = server.store.CreateCateCollection(ctx, db.CreateCateCollectionParams{
 		CollectionID: collection.ID,
@@ -114,7 +134,7 @@ func (server *Server) updateCollection(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, collection)
+	ctx.Status(http.StatusOK)
 }
 
 func (server *Server) deleteCollection(ctx *gin.Context) {
@@ -124,7 +144,23 @@ func (server *Server) deleteCollection(ctx *gin.Context) {
 		return
 	}
 
-	err := server.store.DeleteCollection(ctx, params.ID)
+	cateColections, err := server.store.ListCateCollections(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	for i := 0; i < len(cateColections)-1; i++ {
+		if cateColections[i].CollectionID == params.ID {
+			if err := server.store.DeleteCateCollection(ctx, cateColections[i].ID); err != nil {
+				ctx.JSON(http.StatusInternalServerError, errResponse(err))
+				return
+			}
+
+		}
+	}
+
+	err = server.store.DeleteCollection(ctx, params.ID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 		return

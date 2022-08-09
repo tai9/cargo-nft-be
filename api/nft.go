@@ -5,24 +5,21 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tai9/cargo-nft-be/constants"
 	db "github.com/tai9/cargo-nft-be/db/sqlc"
+	"github.com/tai9/cargo-nft-be/token"
 )
 
 type createNFTRequest struct {
-	UserID          int64  `json:"user_id" binding:"required"`
-	CollectionID    int64  `json:"collection_id" binding:"required"`
-	Name            string `json:"name" binding:"required"`
-	Description     string `json:"description"`
-	FeaturedImg     string `json:"featured_img" binding:"required"`
-	Supply          int32  `json:"supply" binding:"required"`
-	Views           string `json:"views"`
-	Favorites       string `json:"favorites"`
-	ContractAddress string `json:"contract_address" binding:"required"`
-	TokenID         string `json:"token_id"`
-	TokenStandard   string `json:"token_standard"`
-	Blockchain      string `json:"blockchain"`
-	Metadata        string `json:"metadata"`
+	CollectionID  int64  `json:"collection_id" binding:"required"`
+	Name          string `json:"name" binding:"required"`
+	Description   string `json:"description"`
+	FeaturedImg   string `json:"featured_img" binding:"required"`
+	Views         int64  `json:"views"`
+	Favorites     string `json:"favorites"`
+	TokenID       string `json:"token_id"`
+	TokenStandard string `json:"token_standard"`
+	Blockchain    string `json:"blockchain"`
+	Metadata      string `json:"metadata"`
 }
 
 func (server *Server) createNFT(ctx *gin.Context) {
@@ -33,51 +30,47 @@ func (server *Server) createNFT(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	user, err := server.store.GetUser(ctx, authPayload.WalletAddress)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
 	arg := db.CreateNFTParams{
-		UserID:          req.UserID,
+		OwnerID:         user.ID,
+		UserID:          user.ID,
 		CollectionID:    req.CollectionID,
 		Name:            req.Name,
 		Description:     req.Description,
 		FeaturedImg:     req.FeaturedImg,
-		Supply:          req.Supply,
+		Supply:          1,
 		Views:           req.Views,
 		Favorites:       req.Favorites,
-		ContractAddress: req.ContractAddress,
+		ContractAddress: "",
 		TokenID:         req.TokenID,
 		TokenStandard:   req.TokenStandard,
 		Blockchain:      req.Blockchain,
 		Metadata:        req.Metadata,
 	}
 
-	nft, err := server.store.CreateNFT(ctx, arg)
+	nftTxResult, err := server.store.CreateNFTTx(ctx, arg)
+
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 		return
 	}
 
-	_, err = server.store.CreateTransaction(ctx, db.CreateTransactionParams{
-		NftID:           nft.ID,
-		Event:           constants.MINTED,
-		Token:           "",
-		Quantity:        0,
-		FromUserID:      constants.NULL_ADDRESS_USER_ID,
-		ToUserID:        nft.UserID,
-		TransactionHash: "",
-	})
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errResponse(err))
-		return
-	}
-
-	ctx.JSON(http.StatusOK, nft)
+	ctx.JSON(http.StatusOK, nftTxResult)
 }
 
 type updateNFTRequest struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Supply      int32  `json:"supply"`
+	Supply      int64  `json:"supply"`
 	FeaturedImg string `json:"featured_img"`
-	Views       string `json:"views"`
+	Views       int64  `json:"views"`
 	Favorites   string `json:"favorites"`
 }
 
@@ -162,6 +155,10 @@ func (server *Server) listNFT(ctx *gin.Context) {
 		return
 	}
 
+	// nfts1, _ := server.thirdwebSdk.GetNFTCollection("0x0dE0B90D98493C66954b5F759625f02fe57e5477")
+	// nfts2, _ := nfts1.GetAll()
+	// fmt.Println(nfts2)
+
 	searchQuery := fmt.Sprintf("%%%s%%", req.Search)
 
 	arg := db.ListNFTsParams{
@@ -205,11 +202,10 @@ func checkEmptyNFT(req updateNFTRequest, nft *db.Nft) {
 	if req.FeaturedImg == "" {
 		req.FeaturedImg = nft.FeaturedImg
 	}
-	if req.Views == "" {
+	if req.Views == 0 {
 		req.Views = nft.Views
 	}
 	if req.Favorites == "" {
 		req.Favorites = nft.Favorites
 	}
-
 }

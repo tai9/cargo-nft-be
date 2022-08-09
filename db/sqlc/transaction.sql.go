@@ -14,7 +14,7 @@ INSERT INTO transactions (
 ) VALUES (
   $1, $2, $3, $4, $5, $6, $7
 )
-RETURNING id, nft_id, event, quantity, token, from_user_id, to_user_id, transaction_hash, created_at, updated_at
+RETURNING id, nft_id, event, token, quantity, from_user_id, to_user_id, transaction_hash, created_at, updated_at
 `
 
 type CreateTransactionParams struct {
@@ -42,8 +42,8 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 		&i.ID,
 		&i.NftID,
 		&i.Event,
-		&i.Quantity,
 		&i.Token,
+		&i.Quantity,
 		&i.FromUserID,
 		&i.ToUserID,
 		&i.TransactionHash,
@@ -75,7 +75,7 @@ func (q *Queries) GetTotalTransaction(ctx context.Context) (int64, error) {
 }
 
 const getTransaction = `-- name: GetTransaction :one
-SELECT id, nft_id, event, quantity, token, from_user_id, to_user_id, transaction_hash, created_at, updated_at FROM transactions
+SELECT id, nft_id, event, token, quantity, from_user_id, to_user_id, transaction_hash, created_at, updated_at FROM transactions
 WHERE id = $1 LIMIT 1
 `
 
@@ -86,8 +86,8 @@ func (q *Queries) GetTransaction(ctx context.Context, id int64) (Transaction, er
 		&i.ID,
 		&i.NftID,
 		&i.Event,
-		&i.Quantity,
 		&i.Token,
+		&i.Quantity,
 		&i.FromUserID,
 		&i.ToUserID,
 		&i.TransactionHash,
@@ -98,7 +98,7 @@ func (q *Queries) GetTransaction(ctx context.Context, id int64) (Transaction, er
 }
 
 const listTransactions = `-- name: ListTransactions :many
-SELECT id, nft_id, event, quantity, token, from_user_id, to_user_id, transaction_hash, created_at, updated_at FROM transactions
+SELECT id, nft_id, event, token, quantity, from_user_id, to_user_id, transaction_hash, created_at, updated_at FROM transactions
 ORDER BY updated_at
 LIMIT $1
 OFFSET $2
@@ -122,8 +122,8 @@ func (q *Queries) ListTransactions(ctx context.Context, arg ListTransactionsPara
 			&i.ID,
 			&i.NftID,
 			&i.Event,
-			&i.Quantity,
 			&i.Token,
+			&i.Quantity,
 			&i.FromUserID,
 			&i.ToUserID,
 			&i.TransactionHash,

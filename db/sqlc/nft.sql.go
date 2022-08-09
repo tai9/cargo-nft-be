@@ -10,23 +10,24 @@ import (
 
 const createNFT = `-- name: CreateNFT :one
 INSERT INTO nfts (
-  user_id, collection_id, name, description, featured_img, supply,
+  owner_id, user_id, collection_id, name, description, featured_img, supply,
   views, favorites, contract_address, token_id, token_standard,
   blockchain, metadata
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
 )
-RETURNING id, user_id, collection_id, name, description, featured_img, supply, views, favorites, contract_address, token_id, token_standard, blockchain, metadata, created_at, updated_at
+RETURNING id, owner_id, user_id, collection_id, name, description, featured_img, supply, views, favorites, contract_address, token_id, token_standard, blockchain, metadata, created_at, updated_at
 `
 
 type CreateNFTParams struct {
+	OwnerID         int64  `json:"owner_id"`
 	UserID          int64  `json:"user_id"`
 	CollectionID    int64  `json:"collection_id"`
 	Name            string `json:"name"`
 	Description     string `json:"description"`
 	FeaturedImg     string `json:"featured_img"`
-	Supply          int32  `json:"supply"`
-	Views           string `json:"views"`
+	Supply          int64  `json:"supply"`
+	Views           int64  `json:"views"`
 	Favorites       string `json:"favorites"`
 	ContractAddress string `json:"contract_address"`
 	TokenID         string `json:"token_id"`
@@ -37,6 +38,7 @@ type CreateNFTParams struct {
 
 func (q *Queries) CreateNFT(ctx context.Context, arg CreateNFTParams) (Nft, error) {
 	row := q.db.QueryRowContext(ctx, createNFT,
+		arg.OwnerID,
 		arg.UserID,
 		arg.CollectionID,
 		arg.Name,
@@ -54,6 +56,7 @@ func (q *Queries) CreateNFT(ctx context.Context, arg CreateNFTParams) (Nft, erro
 	var i Nft
 	err := row.Scan(
 		&i.ID,
+		&i.OwnerID,
 		&i.UserID,
 		&i.CollectionID,
 		&i.Name,
@@ -84,7 +87,7 @@ func (q *Queries) DeleteNFT(ctx context.Context, id int64) error {
 }
 
 const getNFT = `-- name: GetNFT :one
-SELECT id, user_id, collection_id, name, description, featured_img, supply, views, favorites, contract_address, token_id, token_standard, blockchain, metadata, created_at, updated_at FROM nfts
+SELECT id, owner_id, user_id, collection_id, name, description, featured_img, supply, views, favorites, contract_address, token_id, token_standard, blockchain, metadata, created_at, updated_at FROM nfts
 WHERE id = $1 LIMIT 1
 `
 
@@ -93,6 +96,7 @@ func (q *Queries) GetNFT(ctx context.Context, id int64) (Nft, error) {
 	var i Nft
 	err := row.Scan(
 		&i.ID,
+		&i.OwnerID,
 		&i.UserID,
 		&i.CollectionID,
 		&i.Name,
@@ -138,7 +142,7 @@ func (q *Queries) GetTotalNFTByCollectionId(ctx context.Context, id int64) (int6
 }
 
 const listNFTs = `-- name: ListNFTs :many
-SELECT nfts.id, nfts.user_id, nfts.collection_id, nfts.name, nfts.description, nfts.featured_img, nfts.supply, nfts.views, nfts.favorites, nfts.contract_address, nfts.token_id, nfts.token_standard, nfts.blockchain, nfts.metadata, nfts.created_at, nfts.updated_at, collections."name" collection_name FROM nfts, collections
+SELECT nfts.id, nfts.owner_id, nfts.user_id, nfts.collection_id, nfts.name, nfts.description, nfts.featured_img, nfts.supply, nfts.views, nfts.favorites, nfts.contract_address, nfts.token_id, nfts.token_standard, nfts.blockchain, nfts.metadata, nfts.created_at, nfts.updated_at, collections."name" collection_name FROM nfts, collections
 WHERE nfts.collection_id = collections.id AND LOWER(nfts."name") LIKE $3::varchar
 ORDER BY updated_at
 LIMIT $1
@@ -153,13 +157,14 @@ type ListNFTsParams struct {
 
 type ListNFTsRow struct {
 	ID              int64     `json:"id"`
+	OwnerID         int64     `json:"owner_id"`
 	UserID          int64     `json:"user_id"`
 	CollectionID    int64     `json:"collection_id"`
 	Name            string    `json:"name"`
 	Description     string    `json:"description"`
 	FeaturedImg     string    `json:"featured_img"`
-	Supply          int32     `json:"supply"`
-	Views           string    `json:"views"`
+	Supply          int64     `json:"supply"`
+	Views           int64     `json:"views"`
 	Favorites       string    `json:"favorites"`
 	ContractAddress string    `json:"contract_address"`
 	TokenID         string    `json:"token_id"`
@@ -182,6 +187,7 @@ func (q *Queries) ListNFTs(ctx context.Context, arg ListNFTsParams) ([]ListNFTsR
 		var i ListNFTsRow
 		if err := rows.Scan(
 			&i.ID,
+			&i.OwnerID,
 			&i.UserID,
 			&i.CollectionID,
 			&i.Name,
@@ -223,9 +229,9 @@ type UpdateNFTParams struct {
 	ID          int64  `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Supply      int32  `json:"supply"`
+	Supply      int64  `json:"supply"`
 	FeaturedImg string `json:"featured_img"`
-	Views       string `json:"views"`
+	Views       int64  `json:"views"`
 	Favorites   string `json:"favorites"`
 }
 

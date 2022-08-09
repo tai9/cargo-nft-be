@@ -18,9 +18,9 @@ OFFSET $2;
 INSERT INTO collections (
   user_id, name, description, blockchain,
   owners, payment_token, creator_earning, featured_img,
-  banner_img, ins_link, twitter_link, website_link
+  banner_img, ins_link, twitter_link, website_link, contract_address
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
 )
 RETURNING *;
 

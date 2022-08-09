@@ -39,7 +39,7 @@ func (server *Server) createOffer(ctx *gin.Context) {
 		Quantity:        req.Quantity,
 		Token:           req.Token,
 		Expiration:      req.Expiration,
-		FloorDifference: "-", // TODO: calc with collection floor price
+		FloorDifference: 0, // TODO: calc with collection floor price
 
 	}
 
@@ -56,7 +56,7 @@ type updateOfferRequest struct {
 	UsdPrice        float64   `json:"usd_price"`
 	Token           string    `json:"token"`
 	Quantity        float64   `json:"quantity"`
-	FloorDifference string    `json:"floor_difference"`
+	FloorDifference float64   `json:"floor_difference"`
 	Expiration      time.Time `json:"expiration"`
 }
 
@@ -171,7 +171,7 @@ func checkEmptyOffer(req updateOfferRequest, offer *db.Offer) {
 	if req.Quantity == 0 {
 		req.Quantity = offer.Quantity
 	}
-	if req.FloorDifference == "" {
+	if req.FloorDifference == 0 {
 		req.FloorDifference = offer.FloorDifference
 	}
 	if req.Expiration == time.Now() {

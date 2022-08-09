@@ -12,26 +12,27 @@ const createCollection = `-- name: CreateCollection :one
 INSERT INTO collections (
   user_id, name, description, blockchain,
   owners, payment_token, creator_earning, featured_img,
-  banner_img, ins_link, twitter_link, website_link
+  banner_img, ins_link, twitter_link, website_link, contract_address
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
 )
-RETURNING id, user_id, name, description, blockchain, owners, payment_token, creator_earning, featured_img, banner_img, ins_link, twitter_link, website_link, created_at, updated_at
+RETURNING id, user_id, name, description, blockchain, owners, payment_token, creator_earning, featured_img, banner_img, ins_link, twitter_link, website_link, created_at, updated_at, contract_address
 `
 
 type CreateCollectionParams struct {
-	UserID         int64  `json:"user_id"`
-	Name           string `json:"name"`
-	Description    string `json:"description"`
-	Blockchain     string `json:"blockchain"`
-	Owners         string `json:"owners"`
-	PaymentToken   string `json:"payment_token"`
-	CreatorEarning string `json:"creator_earning"`
-	FeaturedImg    string `json:"featured_img"`
-	BannerImg      string `json:"banner_img"`
-	InsLink        string `json:"ins_link"`
-	TwitterLink    string `json:"twitter_link"`
-	WebsiteLink    string `json:"website_link"`
+	UserID          int64  `json:"user_id"`
+	Name            string `json:"name"`
+	Description     string `json:"description"`
+	Blockchain      string `json:"blockchain"`
+	Owners          string `json:"owners"`
+	PaymentToken    string `json:"payment_token"`
+	CreatorEarning  string `json:"creator_earning"`
+	FeaturedImg     string `json:"featured_img"`
+	BannerImg       string `json:"banner_img"`
+	InsLink         string `json:"ins_link"`
+	TwitterLink     string `json:"twitter_link"`
+	WebsiteLink     string `json:"website_link"`
+	ContractAddress string `json:"contract_address"`
 }
 
 func (q *Queries) CreateCollection(ctx context.Context, arg CreateCollectionParams) (Collection, error) {
@@ -48,6 +49,7 @@ func (q *Queries) CreateCollection(ctx context.Context, arg CreateCollectionPara
 		arg.InsLink,
 		arg.TwitterLink,
 		arg.WebsiteLink,
+		arg.ContractAddress,
 	)
 	var i Collection
 	err := row.Scan(
@@ -66,6 +68,7 @@ func (q *Queries) CreateCollection(ctx context.Context, arg CreateCollectionPara
 		&i.WebsiteLink,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ContractAddress,
 	)
 	return i, err
 }
@@ -81,29 +84,30 @@ func (q *Queries) DeleteCollection(ctx context.Context, id int64) error {
 }
 
 const getCollection = `-- name: GetCollection :one
-SELECT collections.id, collections.user_id, collections.name, collections.description, collections.blockchain, collections.owners, collections.payment_token, collections.creator_earning, collections.featured_img, collections.banner_img, collections.ins_link, collections.twitter_link, collections.website_link, collections.created_at, collections.updated_at, users.username created_by FROM collections, users
+SELECT collections.id, collections.user_id, collections.name, collections.description, collections.blockchain, collections.owners, collections.payment_token, collections.creator_earning, collections.featured_img, collections.banner_img, collections.ins_link, collections.twitter_link, collections.website_link, collections.created_at, collections.updated_at, collections.contract_address, users.username created_by FROM collections, users
 WHERE collections.user_id = users.id
 AND collections.id = $1
 LIMIT 1
 `
 
 type GetCollectionRow struct {
-	ID             int64     `json:"id"`
-	UserID         int64     `json:"user_id"`
-	Name           string    `json:"name"`
-	Description    string    `json:"description"`
-	Blockchain     string    `json:"blockchain"`
-	Owners         string    `json:"owners"`
-	PaymentToken   string    `json:"payment_token"`
-	CreatorEarning string    `json:"creator_earning"`
-	FeaturedImg    string    `json:"featured_img"`
-	BannerImg      string    `json:"banner_img"`
-	InsLink        string    `json:"ins_link"`
-	TwitterLink    string    `json:"twitter_link"`
-	WebsiteLink    string    `json:"website_link"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
-	CreatedBy      string    `json:"created_by"`
+	ID              int64     `json:"id"`
+	UserID          int64     `json:"user_id"`
+	Name            string    `json:"name"`
+	Description     string    `json:"description"`
+	Blockchain      string    `json:"blockchain"`
+	Owners          string    `json:"owners"`
+	PaymentToken    string    `json:"payment_token"`
+	CreatorEarning  string    `json:"creator_earning"`
+	FeaturedImg     string    `json:"featured_img"`
+	BannerImg       string    `json:"banner_img"`
+	InsLink         string    `json:"ins_link"`
+	TwitterLink     string    `json:"twitter_link"`
+	WebsiteLink     string    `json:"website_link"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+	ContractAddress string    `json:"contract_address"`
+	CreatedBy       string    `json:"created_by"`
 }
 
 func (q *Queries) GetCollection(ctx context.Context, id int64) (GetCollectionRow, error) {
@@ -125,6 +129,7 @@ func (q *Queries) GetCollection(ctx context.Context, id int64) (GetCollectionRow
 		&i.WebsiteLink,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ContractAddress,
 		&i.CreatedBy,
 	)
 	return i, err
@@ -142,7 +147,7 @@ func (q *Queries) GetTotalCollection(ctx context.Context) (int64, error) {
 }
 
 const listCollections = `-- name: ListCollections :many
-SELECT collections.id, collections.user_id, collections.name, collections.description, collections.blockchain, collections.owners, collections.payment_token, collections.creator_earning, collections.featured_img, collections.banner_img, collections.ins_link, collections.twitter_link, collections.website_link, collections.created_at, collections.updated_at, users.username created_by FROM collections, users
+SELECT collections.id, collections.user_id, collections.name, collections.description, collections.blockchain, collections.owners, collections.payment_token, collections.creator_earning, collections.featured_img, collections.banner_img, collections.ins_link, collections.twitter_link, collections.website_link, collections.created_at, collections.updated_at, collections.contract_address, users.username created_by FROM collections, users
 WHERE collections.user_id = users.id
 ORDER BY updated_at
 LIMIT $1
@@ -155,22 +160,23 @@ type ListCollectionsParams struct {
 }
 
 type ListCollectionsRow struct {
-	ID             int64     `json:"id"`
-	UserID         int64     `json:"user_id"`
-	Name           string    `json:"name"`
-	Description    string    `json:"description"`
-	Blockchain     string    `json:"blockchain"`
-	Owners         string    `json:"owners"`
-	PaymentToken   string    `json:"payment_token"`
-	CreatorEarning string    `json:"creator_earning"`
-	FeaturedImg    string    `json:"featured_img"`
-	BannerImg      string    `json:"banner_img"`
-	InsLink        string    `json:"ins_link"`
-	TwitterLink    string    `json:"twitter_link"`
-	WebsiteLink    string    `json:"website_link"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
-	CreatedBy      string    `json:"created_by"`
+	ID              int64     `json:"id"`
+	UserID          int64     `json:"user_id"`
+	Name            string    `json:"name"`
+	Description     string    `json:"description"`
+	Blockchain      string    `json:"blockchain"`
+	Owners          string    `json:"owners"`
+	PaymentToken    string    `json:"payment_token"`
+	CreatorEarning  string    `json:"creator_earning"`
+	FeaturedImg     string    `json:"featured_img"`
+	BannerImg       string    `json:"banner_img"`
+	InsLink         string    `json:"ins_link"`
+	TwitterLink     string    `json:"twitter_link"`
+	WebsiteLink     string    `json:"website_link"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+	ContractAddress string    `json:"contract_address"`
+	CreatedBy       string    `json:"created_by"`
 }
 
 func (q *Queries) ListCollections(ctx context.Context, arg ListCollectionsParams) ([]ListCollectionsRow, error) {
@@ -198,6 +204,7 @@ func (q *Queries) ListCollections(ctx context.Context, arg ListCollectionsParams
 			&i.WebsiteLink,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.ContractAddress,
 			&i.CreatedBy,
 		); err != nil {
 			return nil, err

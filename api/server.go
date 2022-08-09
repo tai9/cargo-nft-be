@@ -9,27 +9,30 @@ import (
 	db "github.com/tai9/cargo-nft-be/db/sqlc"
 	"github.com/tai9/cargo-nft-be/token"
 	"github.com/tai9/cargo-nft-be/utils"
+	"github.com/thirdweb-dev/go-sdk/thirdweb"
 )
 
 // Server serves HTTP request for our services.
 type Server struct {
-	store      db.Store
-	router     *gin.Engine
-	config     utils.Config
-	tokenMaker token.Maker
+	store       db.Store
+	router      *gin.Engine
+	config      utils.Config
+	tokenMaker  token.Maker
+	thirdwebSdk *thirdweb.ThirdwebSDK
 }
 
 // NewServer creates a new HTTP server and setup routing.
-func NewServer(config utils.Config, store db.Store) (*Server, error) {
+func NewServer(config utils.Config, store db.Store, thirdwebSdk *thirdweb.ThirdwebSDK) (*Server, error) {
 	tokenMaker, err := token.NewJWTMaker(config.TokenSymmetricKey)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create token maker: %w", err)
 	}
 
 	server := &Server{
-		store:      store,
-		config:     config,
-		tokenMaker: tokenMaker,
+		store:       store,
+		config:      config,
+		tokenMaker:  tokenMaker,
+		thirdwebSdk: thirdwebSdk,
 	}
 
 	server.setupRouter()

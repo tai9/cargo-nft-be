@@ -14,7 +14,7 @@ INSERT INTO offers (
 ) VALUES (
   $1, $2, $3, $4, $5, $6, $7
 )
-RETURNING id, user_id, nft_id, quantity, usd_price, token, floor_difference, expiration, created_at, updated_at
+RETURNING id, user_id, nft_id, quantity, usd_price, floor_difference, token, expiration, created_at, updated_at
 `
 
 type CreateOfferParams struct {
@@ -22,7 +22,7 @@ type CreateOfferParams struct {
 	NftID           int64     `json:"nft_id"`
 	UsdPrice        float64   `json:"usd_price"`
 	Quantity        float64   `json:"quantity"`
-	FloorDifference string    `json:"floor_difference"`
+	FloorDifference float64   `json:"floor_difference"`
 	Expiration      time.Time `json:"expiration"`
 	Token           string    `json:"token"`
 }
@@ -44,8 +44,8 @@ func (q *Queries) CreateOffer(ctx context.Context, arg CreateOfferParams) (Offer
 		&i.NftID,
 		&i.Quantity,
 		&i.UsdPrice,
-		&i.Token,
 		&i.FloorDifference,
+		&i.Token,
 		&i.Expiration,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -64,7 +64,7 @@ func (q *Queries) DeleteOffer(ctx context.Context, id int64) error {
 }
 
 const getOffer = `-- name: GetOffer :one
-SELECT id, user_id, nft_id, quantity, usd_price, token, floor_difference, expiration, created_at, updated_at FROM offers
+SELECT id, user_id, nft_id, quantity, usd_price, floor_difference, token, expiration, created_at, updated_at FROM offers
 WHERE id = $1 LIMIT 1
 `
 
@@ -77,8 +77,8 @@ func (q *Queries) GetOffer(ctx context.Context, id int64) (Offer, error) {
 		&i.NftID,
 		&i.Quantity,
 		&i.UsdPrice,
-		&i.Token,
 		&i.FloorDifference,
+		&i.Token,
 		&i.Expiration,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -98,7 +98,7 @@ func (q *Queries) GetTotalOffer(ctx context.Context) (int64, error) {
 }
 
 const listOffers = `-- name: ListOffers :many
-SELECT id, user_id, nft_id, quantity, usd_price, token, floor_difference, expiration, created_at, updated_at FROM offers
+SELECT id, user_id, nft_id, quantity, usd_price, floor_difference, token, expiration, created_at, updated_at FROM offers
 ORDER BY updated_at
 LIMIT $1
 OFFSET $2
@@ -124,8 +124,8 @@ func (q *Queries) ListOffers(ctx context.Context, arg ListOffersParams) ([]Offer
 			&i.NftID,
 			&i.Quantity,
 			&i.UsdPrice,
-			&i.Token,
 			&i.FloorDifference,
+			&i.Token,
 			&i.Expiration,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -153,7 +153,7 @@ type UpdateOfferParams struct {
 	ID              int64     `json:"id"`
 	UsdPrice        float64   `json:"usd_price"`
 	Quantity        float64   `json:"quantity"`
-	FloorDifference string    `json:"floor_difference"`
+	FloorDifference float64   `json:"floor_difference"`
 	Expiration      time.Time `json:"expiration"`
 }
 

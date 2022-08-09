@@ -20,11 +20,11 @@ OFFSET $2;
 
 -- name: CreateNFT :one
 INSERT INTO nfts (
-  user_id, collection_id, name, description, featured_img, supply,
+  owner_id, user_id, collection_id, name, description, featured_img, supply,
   views, favorites, contract_address, token_id, token_standard,
   blockchain, metadata
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
 )
 RETURNING *;
 
