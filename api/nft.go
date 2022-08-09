@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	db "github.com/tai9/cargo-nft-be/db/sqlc"
 	"github.com/tai9/cargo-nft-be/token"
+	"github.com/thirdweb-dev/go-sdk/thirdweb"
 )
 
 type createNFTRequest struct {
@@ -33,6 +34,28 @@ func (server *Server) createNFT(ctx *gin.Context) {
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 	user, err := server.store.GetUser(ctx, authPayload.WalletAddress)
 
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	collection, err := server.store.GetCollection(ctx, req.CollectionID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errResponse(err))
+		return
+	}
+
+	nftCollection, err := server.thirdwebSdk.GetNFTCollection(collection.ContractAddress)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	_, err = nftCollection.Mint(&thirdweb.NFTMetadataInput{
+		Name:        req.Name,
+		Description: req.Description,
+		Image:       req.FeaturedImg,
+	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 		return
@@ -154,10 +177,6 @@ func (server *Server) listNFT(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errResponse(err))
 		return
 	}
-
-	// nfts1, _ := server.thirdwebSdk.GetNFTCollection("0x0dE0B90D98493C66954b5F759625f02fe57e5477")
-	// nfts2, _ := nfts1.GetAll()
-	// fmt.Println(nfts2)
 
 	searchQuery := fmt.Sprintf("%%%s%%", req.Search)
 
