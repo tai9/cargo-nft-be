@@ -10,13 +10,15 @@ import (
 // Config stores all configuration of the appilcation.
 // The values are read by viper from a config file or enviroment variables.
 type Config struct {
-	DBDriver             string        `mapstructure:"DB_DRIVER"`
-	DBSource             string        `mapstructure:"DB_SOURCE"`
-	ServerAddress        string        `mapstructure:"SERVER_ADDRESS"`
-	TokenSymmetricKey    string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
-	THIRDWEB_PRIVATE_KEY string        `mapstructure:"THIRDWEB_PRIVATE_KEY"`
-	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
-	RefreshTokenDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
+	DBDriver                   string        `mapstructure:"DB_DRIVER"`
+	DBSource                   string        `mapstructure:"DB_SOURCE"`
+	ServerAddress              string        `mapstructure:"SERVER_ADDRESS"`
+	TokenSymmetricKey          string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
+	ThirdwebPrivateKey         string        `mapstructure:"THIRDWEB_PRIVATE_KEY"`
+	MarketplaceContractAddress string        `mapstructure:"MARKETPLACE_CONTRACT_ADDRESS"`
+	MetaMaskAddress            string        `mapstructure:"METAMASK_ADDRESS"`
+	AccessTokenDuration        time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
+	RefreshTokenDuration       time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
 }
 
 // LoadConfig reads configuration from config file or enviroment variables.

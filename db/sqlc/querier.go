@@ -11,6 +11,7 @@ type Querier interface {
 	CreateCategory(ctx context.Context, arg CreateCategoryParams) (Category, error)
 	CreateCollection(ctx context.Context, arg CreateCollectionParams) (Collection, error)
 	CreateCryptoCurrency(ctx context.Context, arg CreateCryptoCurrencyParams) (CryptoCurrency, error)
+	CreateListing(ctx context.Context, arg CreateListingParams) (Listing, error)
 	CreateNFT(ctx context.Context, arg CreateNFTParams) (Nft, error)
 	CreateOffer(ctx context.Context, arg CreateOfferParams) (Offer, error)
 	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error)
@@ -19,6 +20,7 @@ type Querier interface {
 	DeleteCategory(ctx context.Context, id int64) error
 	DeleteCollection(ctx context.Context, id int64) error
 	DeleteCryptoCurrency(ctx context.Context, code string) error
+	DeleteListing(ctx context.Context, id int64) error
 	DeleteNFT(ctx context.Context, id int64) error
 	DeleteOffer(ctx context.Context, id int64) error
 	DeleteTransaction(ctx context.Context, id int64) error
@@ -27,12 +29,14 @@ type Querier interface {
 	GetCategory(ctx context.Context, id int64) (Category, error)
 	GetCollection(ctx context.Context, id int64) (GetCollectionRow, error)
 	GetCryptoCurrency(ctx context.Context, code string) (CryptoCurrency, error)
+	GetListing(ctx context.Context, id int64) (Listing, error)
 	GetNFT(ctx context.Context, id int64) (Nft, error)
 	GetOffer(ctx context.Context, id int64) (Offer, error)
 	GetTotalCateCollection(ctx context.Context) (int64, error)
 	GetTotalCategory(ctx context.Context) (int64, error)
 	GetTotalCollection(ctx context.Context) (int64, error)
 	GetTotalCryptoCurrency(ctx context.Context) (int64, error)
+	GetTotalListing(ctx context.Context) (int64, error)
 	GetTotalNFT(ctx context.Context, search string) (int64, error)
 	GetTotalNFTByCollectionId(ctx context.Context, id int64) (int64, error)
 	GetTotalOffer(ctx context.Context) (int64, error)
@@ -45,6 +49,7 @@ type Querier interface {
 	ListCategories(ctx context.Context, arg ListCategoriesParams) ([]Category, error)
 	ListCollections(ctx context.Context, arg ListCollectionsParams) ([]ListCollectionsRow, error)
 	ListCryptoCurrencies(ctx context.Context, arg ListCryptoCurrenciesParams) ([]CryptoCurrency, error)
+	ListListings(ctx context.Context, arg ListListingsParams) ([]Listing, error)
 	ListNFTs(ctx context.Context, arg ListNFTsParams) ([]ListNFTsRow, error)
 	ListOffers(ctx context.Context, arg ListOffersParams) ([]Offer, error)
 	ListTransactions(ctx context.Context, arg ListTransactionsParams) ([]Transaction, error)
@@ -53,6 +58,7 @@ type Querier interface {
 	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) error
 	UpdateCollection(ctx context.Context, arg UpdateCollectionParams) error
 	UpdateCryptoCurrency(ctx context.Context, arg UpdateCryptoCurrencyParams) error
+	UpdateListing(ctx context.Context, arg UpdateListingParams) error
 	UpdateNFT(ctx context.Context, arg UpdateNFTParams) error
 	UpdateOffer(ctx context.Context, arg UpdateOfferParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error

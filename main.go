@@ -25,7 +25,7 @@ func main() {
 	// - a chain name (mainnet, rinkeby, goerli, polygon, mumbai, avalanche, fantom)
 	// - a custom RPC URL
 	thirdwebSdk, err := thirdweb.NewThirdwebSDK("rinkeby", &thirdweb.SDKOptions{
-		PrivateKey: config.THIRDWEB_PRIVATE_KEY,
+		PrivateKey: config.ThirdwebPrivateKey,
 	})
 	if err != nil {
 		panic(err)
