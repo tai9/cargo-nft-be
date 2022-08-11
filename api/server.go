@@ -96,6 +96,7 @@ func (server *Server) setupRouter() {
 	authRoutes.POST("/listings", server.createListing)
 	authRoutes.PATCH("/listings/:id", server.updateListing)
 	authRoutes.DELETE("/listings/:id", server.deleteListing)
+	authRoutes.POST("/listings/:id", server.cancelListing)
 
 	authRoutes.GET("/transactions", server.listTransaction)
 	authRoutes.POST("/transactions", server.createTransaction)

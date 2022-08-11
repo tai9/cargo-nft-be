@@ -13,9 +13,9 @@ OFFSET $2;
 
 -- name: CreateListing :one
 INSERT INTO listings (
-  user_id, nft_id, usd_unit_price, quantity, usd_price, expiration, token, from_user_id
+  user_id, nft_id, usd_unit_price, quantity, usd_price, expiration, token, from_user_id, listing_id
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8
+  $1, $2, $3, $4, $5, $6, $7, $8, $9
 )
 RETURNING *;
 

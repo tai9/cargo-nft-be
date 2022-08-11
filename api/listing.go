@@ -70,6 +70,7 @@ func (server *Server) createListing(ctx *gin.Context) {
 		Token:      req.Token,
 		Expiration: req.Expiration,
 		FromUserID: user.ID,
+		ListingID:  int32(listingId),
 	}
 
 	listingCreated, err := server.store.CreateListing(ctx, arg)
@@ -140,6 +141,44 @@ func (server *Server) deleteListing(ctx *gin.Context) {
 	ctx.Status(http.StatusOK)
 }
 
+type cancelListingRequest struct {
+	ListingID int64 `json:"listing_id"`
+}
+
+func (server *Server) cancelListing(ctx *gin.Context) {
+	var params ListingParams
+	if err := ctx.ShouldBindUri(&params); err != nil {
+		ctx.JSON(http.StatusBadRequest, errResponse(err))
+		return
+	}
+
+	var req cancelListingRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errResponse(err))
+		return
+	}
+
+	marketplace, err := server.thirdwebSdk.GetMarketplace(server.config.MarketplaceContractAddress)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	_, err = marketplace.CancelListing(int(req.ListingID))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	err = server.store.DeleteListing(ctx, params.ID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	ctx.Status(http.StatusOK)
+}
+
 type ListingParams struct {
 	ID int64 `uri:"id" binding:"required,min=1"`
 }
@@ -164,47 +203,31 @@ func (server *Server) listListing(ctx *gin.Context) {
 		return
 	}
 
-	// arg := db.ListListingsParams{
-	// 	Limit:  req.Limit,
-	// 	Offset: (req.Page - 1) * req.Limit,
-	// }
+	arg := db.ListListingsParams{
+		Limit:  req.Limit,
+		Offset: (req.Page - 1) * req.Limit,
+	}
 
-	marketplace, err := server.thirdwebSdk.GetMarketplace(server.config.MarketplaceContractAddress)
+	listings, err := server.store.ListListings(ctx, arg)
 	if err != nil {
-		fmt.Println("hiiiii")
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 		return
 	}
 
-	listings, err := marketplace.GetActiveListings(&thirdweb.MarketplaceFilter{
-		TokenContract: "0x80e2a899BA8970e0c9b153412CA3F7646DED0285",
-	})
+	totalListings, err := server.store.GetTotalListing(ctx)
 	if err != nil {
-		fmt.Println("hahah")
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 		return
 	}
 
-	// listings, err := server.store.ListListings(ctx, arg)
-	// if err != nil {
-	// 	ctx.JSON(http.StatusInternalServerError, errResponse(err))
-	// 	return
-	// }
+	rsp := ListListingResponse{
+		Page:  req.Page,
+		Limit: req.Limit,
+		Total: totalListings,
+		Data:  listings,
+	}
 
-	// totalListings, err := server.store.GetTotalListing(ctx)
-	// if err != nil {
-	// 	ctx.JSON(http.StatusInternalServerError, errResponse(err))
-	// 	return
-	// }
-
-	// rsp := ListListingResponse{
-	// 	Page:  req.Page,
-	// 	Limit: req.Limit,
-	// 	Total: totalListings,
-	// 	Data:  listings,
-	// }
-
-	ctx.JSON(http.StatusOK, listings)
+	ctx.JSON(http.StatusOK, rsp)
 }
 
 func checkEmptyListing(req updateListingRequest, listing *db.Listing) {

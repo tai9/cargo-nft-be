@@ -10,11 +10,11 @@ import (
 
 const createListing = `-- name: CreateListing :one
 INSERT INTO listings (
-  user_id, nft_id, usd_unit_price, quantity, usd_price, expiration, token, from_user_id
+  user_id, nft_id, usd_unit_price, quantity, usd_price, expiration, token, from_user_id, listing_id
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8
+  $1, $2, $3, $4, $5, $6, $7, $8, $9
 )
-RETURNING id, user_id, nft_id, from_user_id, quantity, usd_price, usd_unit_price, token, expiration, created_at, updated_at
+RETURNING id, user_id, nft_id, from_user_id, quantity, usd_price, usd_unit_price, token, expiration, created_at, updated_at, listing_id
 `
 
 type CreateListingParams struct {
@@ -26,6 +26,7 @@ type CreateListingParams struct {
 	Expiration   time.Time `json:"expiration"`
 	Token        string    `json:"token"`
 	FromUserID   int64     `json:"from_user_id"`
+	ListingID    int32     `json:"listing_id"`
 }
 
 func (q *Queries) CreateListing(ctx context.Context, arg CreateListingParams) (Listing, error) {
@@ -38,6 +39,7 @@ func (q *Queries) CreateListing(ctx context.Context, arg CreateListingParams) (L
 		arg.Expiration,
 		arg.Token,
 		arg.FromUserID,
+		arg.ListingID,
 	)
 	var i Listing
 	err := row.Scan(
@@ -52,6 +54,7 @@ func (q *Queries) CreateListing(ctx context.Context, arg CreateListingParams) (L
 		&i.Expiration,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ListingID,
 	)
 	return i, err
 }
@@ -67,7 +70,7 @@ func (q *Queries) DeleteListing(ctx context.Context, id int64) error {
 }
 
 const getListing = `-- name: GetListing :one
-SELECT id, user_id, nft_id, from_user_id, quantity, usd_price, usd_unit_price, token, expiration, created_at, updated_at FROM listings
+SELECT id, user_id, nft_id, from_user_id, quantity, usd_price, usd_unit_price, token, expiration, created_at, updated_at, listing_id FROM listings
 WHERE id = $1 LIMIT 1
 `
 
@@ -86,6 +89,7 @@ func (q *Queries) GetListing(ctx context.Context, id int64) (Listing, error) {
 		&i.Expiration,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ListingID,
 	)
 	return i, err
 }
@@ -102,7 +106,7 @@ func (q *Queries) GetTotalListing(ctx context.Context) (int64, error) {
 }
 
 const listListings = `-- name: ListListings :many
-SELECT id, user_id, nft_id, from_user_id, quantity, usd_price, usd_unit_price, token, expiration, created_at, updated_at FROM listings
+SELECT id, user_id, nft_id, from_user_id, quantity, usd_price, usd_unit_price, token, expiration, created_at, updated_at, listing_id FROM listings
 ORDER BY updated_at
 LIMIT $1
 OFFSET $2
@@ -134,6 +138,7 @@ func (q *Queries) ListListings(ctx context.Context, arg ListListingsParams) ([]L
 			&i.Expiration,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.ListingID,
 		); err != nil {
 			return nil, err
 		}

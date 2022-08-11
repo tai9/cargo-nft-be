@@ -62,6 +62,7 @@ type Listing struct {
 	Expiration   time.Time `json:"expiration"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
+	ListingID    int32     `json:"listing_id"`
 }
 
 type Nft struct {
