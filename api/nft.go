@@ -144,7 +144,26 @@ func (server *Server) deleteNFT(ctx *gin.Context) {
 		return
 	}
 
-	err := server.store.DeleteNFT(ctx, params.ID)
+	collection, err := server.store.GetCollection(ctx, 1)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errResponse(err))
+		return
+	}
+
+	nftCollection, err := server.thirdwebSdk.GetNFTCollection(collection.ContractAddress)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	tokenId := 0
+	_, err = nftCollection.Burn(tokenId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	err = server.store.DeleteNFT(ctx, params.ID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 		return
