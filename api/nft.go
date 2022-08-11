@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 
@@ -126,6 +127,85 @@ func (server *Server) updateNFT(ctx *gin.Context) {
 		Supply:      req.Supply,
 		Views:       req.Views,
 		Favorites:   req.Favorites,
+	}
+
+	err = server.store.UpdateNFT(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, params)
+}
+
+type transferNFTRequest struct {
+	ToAddress string `json:"to_address"`
+}
+
+func (server *Server) transferNFT(ctx *gin.Context) {
+	var params NFTParams
+	if err := ctx.ShouldBindUri(&params); err != nil {
+		ctx.JSON(http.StatusBadRequest, errResponse(err))
+		return
+	}
+
+	var req transferNFTRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errResponse(err))
+		return
+	}
+
+	user, err := server.store.GetUser(ctx, req.ToAddress)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			user, err = server.store.CreateUser(ctx, db.CreateUserParams{
+				WalletAddress: req.ToAddress,
+			})
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, errResponse(err))
+				return
+			}
+
+		} else {
+			ctx.JSON(http.StatusInternalServerError, errResponse(err))
+			return
+		}
+	}
+
+	nft, err := server.store.GetNFT(ctx, params.ID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	collection, err := server.store.GetCollection(ctx, nft.CollectionID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errResponse(err))
+		return
+	}
+
+	nftCollection, err := server.thirdwebSdk.GetNFTCollection(collection.ContractAddress)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	tokenId := 0
+	_, err = nftCollection.Transfer(req.ToAddress, tokenId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	arg := db.UpdateNFTParams{
+		ID:          params.ID,
+		Name:        nft.Name,
+		Description: nft.Description,
+		FeaturedImg: nft.FeaturedImg,
+		Supply:      nft.Supply,
+		Views:       nft.Views,
+		Favorites:   nft.Favorites,
+		OwnerID:     user.ID,
 	}
 
 	err = server.store.UpdateNFT(ctx, arg)

@@ -221,7 +221,7 @@ func (q *Queries) ListNFTs(ctx context.Context, arg ListNFTsParams) ([]ListNFTsR
 const updateNFT = `-- name: UpdateNFT :exec
 UPDATE nfts
 SET name = $2, description = $3, supply = $4, featured_img = $5,
-    views = $6, favorites = $7
+    views = $6, favorites = $7, owner_id = $8
 WHERE id = $1
 `
 
@@ -233,6 +233,7 @@ type UpdateNFTParams struct {
 	FeaturedImg string `json:"featured_img"`
 	Views       int64  `json:"views"`
 	Favorites   string `json:"favorites"`
+	OwnerID     int64  `json:"owner_id"`
 }
 
 func (q *Queries) UpdateNFT(ctx context.Context, arg UpdateNFTParams) error {
@@ -244,6 +245,7 @@ func (q *Queries) UpdateNFT(ctx context.Context, arg UpdateNFTParams) error {
 		arg.FeaturedImg,
 		arg.Views,
 		arg.Favorites,
+		arg.OwnerID,
 	)
 	return err
 }
