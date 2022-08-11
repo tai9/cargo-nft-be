@@ -82,6 +82,71 @@ func (server *Server) createListing(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, listingCreated)
 }
 
+type buyoutListingRequest struct {
+	NftID        int64 `json:"nft_id" binding:"required"`
+	CollectionID int64 `json:"collection_id" binding:"required"`
+	ListingID    int64 `json:"listing_id" binding:"required"`
+}
+
+func (server *Server) buyoutListing(ctx *gin.Context) {
+	var req buyoutListingRequest
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errResponse(err))
+		return
+	}
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	user, err := server.store.GetUser(ctx, authPayload.WalletAddress)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	nft, err := server.store.GetNFT(ctx, req.NftID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	listing, err := server.store.GetListing(ctx, req.ListingID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	marketplace, err := server.thirdwebSdk.GetMarketplace(server.config.MarketplaceContractAddress)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	_, err = marketplace.BuyoutListing(int(listing.ListingID), 1)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	arg := db.UpdateNFTParams{
+		ID:          nft.ID,
+		Name:        nft.Name,
+		Description: nft.Description,
+		FeaturedImg: nft.FeaturedImg,
+		Supply:      nft.Supply,
+		Views:       nft.Views,
+		Favorites:   nft.Favorites,
+		OwnerID:     user.ID,
+	}
+
+	err = server.store.UpdateNFT(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	ctx.Status(http.StatusOK)
+}
+
 type updateListingRequest struct {
 	UsdPrice   float64   `json:"usd_price"`
 	Token      string    `json:"token"`

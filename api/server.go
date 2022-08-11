@@ -92,6 +92,7 @@ func (server *Server) setupRouter() {
 	authRoutes.PATCH("/nfts/:id", server.updateNFT)
 	authRoutes.DELETE("/nfts/:id", server.deleteNFT)
 	authRoutes.POST("/nfts/:id/transfer", server.transferNFT)
+	authRoutes.POST("/nfts", server.buyoutListing)
 
 	authRoutes.GET("/listings", server.listListing)
 	authRoutes.POST("/listings", server.createListing)
